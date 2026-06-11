@@ -1,56 +1,62 @@
-# Welcome to your Expo app 👋
+# Sentio ☀️
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A daily mood check-in app. Rate your day once a day on a 1–7 scale, see how
+your friends are doing (and reach out when they're having a rough one), and
+keep a fully private journal. Built with Expo, expo-router, and Supabase.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Setup
 
 ```bash
-npm run reset-project
+cd Sentio
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Open the app in Expo Go (scan the QR code) or in an emulator/simulator from
+the terminal menu. Web also works (`w`), though daily reminders are
+mobile-only.
 
-### Other setup steps
+## Environment variables
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+`Sentio/.env` must contain:
 
-## Learn more
+```
+EXPO_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Note: the URL is the bare project URL — no `/rest/v1/` suffix.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Database migrations
 
-## Join the community
+Migrations live in `../supabase/migrations/`. With the Supabase CLI linked to
+your project, apply them from the repo root:
 
-Join our community of developers creating universal apps.
+```bash
+supabase db push
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This creates `profiles`, `friendships`, `checkins`, and `journal_entries`
+with Row Level Security on every table (journal entries are owner-only, no
+exceptions), plus a trigger that creates a profile row on signup from the
+username chosen in the app.
+
+If you prefer not to use the CLI, paste the contents of
+`supabase/migrations/20260611000000_init.sql` into the Supabase SQL Editor.
+
+## Project layout
+
+- `src/app/` — expo-router routes: `(auth)` for sign in/up, `(tabs)` for
+  Today, Friends, Journal, Profile (History lives on Profile)
+- `src/lib/api.ts` — every Supabase call goes through here
+- `src/constants/theme.ts` — all design tokens (light and dark palettes)
+- `src/components/` — the chunky UI kit (3D buttons, chips, the 1–7 rating
+  selector)
+
+## Notes
+
+- One check-in per day, editable until midnight local time; streaks are
+  computed client-side from your own check-ins.
+- The daily reminder ("Time to rate your day!") is a local notification
+  scheduled via expo-notifications from the Profile tab.
+- Appearance (System / Light / Dark) is also on the Profile tab.
